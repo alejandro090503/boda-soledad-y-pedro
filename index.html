@@ -48,6 +48,7 @@ body{font-family:'Montserrat',sans-serif;font-weight:500;color:#2D1B0E;backgroun
 .hero-deco-tl,.hero-deco-tr,.hero-sparkle-1,.hero-sparkle-2,.hero-sparkle-3{z-index:3;}
 
 /* ── GALERIA — RUEDA 3D ── */
+#sgal>.eyebrow,#sgal>.sec-title{padding-left:24px;padding-right:24px;}
 #sgal{padding:52px 0 26px;text-align:center;position:relative;overflow:hidden;overflow-anchor:none;}
 .wheel-scene{overflow-anchor:none;position:relative;width:100%;height:330px;margin:26px auto 0;perspective:1100px;transform-style:preserve-3d;}
 .wheel-ring{overflow-anchor:none;position:absolute;width:100%;height:100%;transform-style:preserve-3d;cursor:grab;}
@@ -166,7 +167,7 @@ body{font-family:'Montserrat',sans-serif;font-weight:500;color:#2D1B0E;backgroun
 /* ── SECCIONES ── */
 section{padding:52px 28px;}
 .eyebrow{font-family:'Montserrat',sans-serif;font-size:12.5px;font-weight:600;letter-spacing:4px;text-transform:uppercase;color:var(--gold);text-align:center;margin-bottom:6px;}
-.sec-title{font-family:'Great Vibes',cursive;font-size:52px;color:var(--pink);text-align:center;line-height:1.1;margin-bottom:6px;}
+.sec-title{font-family:'Great Vibes',cursive;font-size:clamp(38px,12vw,52px);color:var(--pink);text-align:center;line-height:1.1;margin-bottom:6px;}
 
 /* ── MIRROR FRAMES ── */
 .mirror-frame{
@@ -357,7 +358,7 @@ section{padding:52px 28px;}
   display:flex;align-items:center;justify-content:center;gap:10px;
   width:100%;margin-top:20px;padding:17px;
   background:var(--pink);color:#fff;border-radius:50px;border:none;cursor:pointer;
-  font-family:'Montserrat',sans-serif;font-size:15px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;
+  font-family:'Montserrat',sans-serif;font-size:14px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;
   box-shadow:0 6px 22px rgba(196,36,127,0.38);transition:transform .2s;
   position:relative;z-index:1;
 }
@@ -434,7 +435,6 @@ footer{padding:52px 20px 64px;text-align:center;}
 .vinyl-tonearm-head{position:absolute;bottom:0;right:2px;width:5px;height:6px;background:#D9C07C;border-radius:0 0 2px 2px;}
 .vinyl-tonearm-pivot{position:absolute;top:0;right:2px;width:7px;height:7px;border-radius:50%;
   background:radial-gradient(circle,#F0E3B8,#9C7A46);box-shadow:0 1px 3px rgba(0,0,0,.3);}
-}
 
 /* ── PASES ── */
 .pases-wrap{display:none;margin-top:16px;margin-bottom:4px;position:relative;z-index:1;}
@@ -792,7 +792,7 @@ footer{padding:52px 20px 64px;text-align:center;}
       </span>
       <div class="ubic-tipo">Vals y Baile</div>
       <div class="ubic-name">Vals de los Novios</div>
-      <div class="ubic-addr">Vals de los novios 7:00 p.m.<br>Baile 9:00 p.m.<br>En el sal&oacute;n La Conquista</div>
+      <div class="ubic-addr">En el sal&oacute;n La Conquista<br>El baile comienza a las 9:00 p.m.</div>
       <div class="ubic-hora">7:00 p.m.</div>
     </div>
   </section>
