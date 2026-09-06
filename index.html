@@ -95,6 +95,7 @@ body{
    ESTRUCTURA
 ══════════════════════════════════════════════ */
 .wrap{max-width:480px;margin:0 auto;background:var(--bg);position:relative;overflow:clip;}
+.wrap>section,.wrap>footer,.wrap>.orn{position:relative;z-index:1;}
 section{padding:clamp(76px,11vh,112px) clamp(26px,7vw,40px);position:relative;}
 .section-surface{background:var(--surface);}
 .section-paper{background:var(--paper);}
@@ -336,8 +337,8 @@ section{padding:clamp(76px,11vh,112px) clamp(26px,7vw,40px);position:relative;}
   letter-spacing:.24em;text-transform:uppercase;color:var(--ink);
   text-align:center;padding-left:.24em;margin-bottom:30px;
 }
-.dc-figs{display:flex;justify-content:center;gap:38px;margin-bottom:32px;}
-.dc-figs svg{opacity:.8;}
+.dc-figs{display:flex;justify-content:center;align-items:flex-end;gap:26px;margin-bottom:34px;}
+.dc-figs img{height:150px;width:auto;display:block;}
 .dc-panel{
   border:1px solid var(--hair-gold);padding:26px 22px;text-align:center;
   background:var(--paper);
@@ -667,9 +668,9 @@ footer{
 
     <div class="loc-card rv">
       <svg class="loc-icon" width="38" height="34" viewBox="0 0 38 34" fill="none" aria-hidden="true">
-        <path d="M6 12 C6 8.7 8.7 6 12 6 C15.3 6 18 8.7 18 12 C18 15.3 15.3 18 12 18 C8.7 18 6 15.3 6 12Z" stroke="#C4557F" stroke-width="1.2" opacity=".72"/>
-        <path d="M20 20 C20 16.7 22.7 14 26 14 C29.3 14 32 16.7 32 20 C32 23.3 29.3 26 26 26 C22.7 26 20 23.3 20 20Z" stroke="#C4557F" stroke-width="1.2" opacity=".55"/>
-        <path d="M26 10 L28 5 L30 10 Z" fill="#C9A456" opacity=".7"/>
+        <circle cx="15" cy="21" r="9" stroke="#C4557F" stroke-width="1.2" fill="none" opacity=".75"/>
+        <circle cx="25" cy="21" r="9" stroke="#C4557F" stroke-width="1.2" fill="none" opacity=".55"/>
+        <path d="M25 12 L23 8 L25 5.5 L27 8 Z" fill="#C9A456" opacity=".85"/>
       </svg>
       <p class="loc-tipo">Ceremonia civil</p>
       <p class="loc-hora">2:00 p.m.</p>
@@ -748,14 +749,8 @@ footer{
     <div class="hair rv"></div>
     <p class="dc-note rv">Por confirmar</p>
     <div class="dc-figs rv">
-      <svg width="48" height="66" viewBox="0 0 48 66" fill="none" aria-hidden="true">
-        <path d="M16 3 L7 15 L2 16 L8 26 L5 63 H24 H43 L40 26 L46 16 L41 15 L32 3 C30 8 28 10 24 11 C20 10 18 8 16 3Z" stroke="#5B4A51" stroke-width="1.1" fill="none"/>
-        <path d="M24 11 V63" stroke="#5B4A51" stroke-width=".8" opacity=".45"/>
-      </svg>
-      <svg width="48" height="66" viewBox="0 0 48 66" fill="none" aria-hidden="true">
-        <path d="M15 3 L2 18 L10 21 L8 63 H24 H40 L38 21 L46 18 L33 3 L28 13 L24 16 L20 13 Z" stroke="#5B4A51" stroke-width="1.1" fill="none"/>
-        <path d="M21 16 H27 L28 40 H20 Z" stroke="#5B4A51" stroke-width=".8" fill="none" opacity=".45"/>
-      </svg>
+      <img src="./caballero.png" alt="Traje formal para caballero" loading="lazy" width="300" height="610">
+      <img src="./dama.png" alt="Vestido largo para dama" loading="lazy" width="248" height="604">
     </div>
     <div class="dc-panel rv">
       <p class="dc-panel-title">Colores</p>
@@ -975,7 +970,7 @@ function initPetals(){
     var kind=i%3;
     var sp=document.createElementNS('http://www.w3.org/2000/svg','svg');
     var sz=(Math.random()*10+7).toFixed(0);
-    var op=(Math.random()*0.24+0.10).toFixed(2);
+    var op=(Math.random()*0.20+0.08).toFixed(2);
     var col=kind===0?'#5F7F53':(kind===1?'#FDB4E6':'#C9A456');
     sp.setAttribute('viewBox','0 0 24 24');
     sp.setAttribute('fill',col);
