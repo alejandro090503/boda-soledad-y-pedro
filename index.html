@@ -273,6 +273,22 @@ section{padding:var(--pad-y) var(--pad-x);position:relative;}
 ══════════════════════════════════════════════ */
 .fam-grid{display:grid;gap:38px;}
 .fam-block{text-align:center;}
+
+/* Rotador: los padres de la novia y luego los del novio, con fade */
+.fam-rot{display:grid;position:relative;}
+.fam-slide{
+  grid-area:1 / 1;opacity:0;visibility:hidden;
+  transition:opacity .9s ease,visibility .9s;
+}
+.fam-slide.is-on{opacity:1;visibility:visible;}
+.fam-dots{
+  grid-area:2 / 1;display:flex;justify-content:center;gap:8px;margin-top:20px;
+}
+.fam-dots i{
+  width:6px;height:6px;border-radius:50%;background:var(--gold-deep);
+  opacity:.26;transition:opacity .5s ease,transform .5s ease;
+}
+.fam-dots i.on{opacity:.9;transform:scale(1.25);}
 .fam-role{
   font-family:var(--sans);font-size:clamp(12px,1.05vw,13px);font-weight:600;
   letter-spacing:.36em;text-transform:uppercase;color:var(--gold-deep);
@@ -331,6 +347,12 @@ section{padding:var(--pad-y) var(--pad-x);position:relative;}
 .loc-addr{
   font-family:var(--sans);font-size:clamp(15px,1.15vw,16px);font-weight:400;line-height:1.6;
   color:var(--ink-soft);
+}
+.loc-nota{
+  font-family:var(--serif);font-style:italic;font-size:clamp(16px,1.2vw,18px);font-weight:500;
+  color:var(--ink-soft);line-height:1.6;margin-top:14px;
+  padding-top:14px;border-top:1px solid var(--hair-gold);
+  max-width:320px;margin-left:auto;margin-right:auto;
 }
 .loc-link{
   display:inline-block;margin-top:22px;
@@ -795,20 +817,13 @@ footer{
    RESPONSIVE
 ══════════════════════════════════════════════ */
 @media(min-width:760px){
-  .fam-grid{grid-template-columns:repeat(2,1fr);gap:clamp(38px,5vw,58px) clamp(30px,4vw,52px);}
+  .fam-grid{grid-template-columns:repeat(2,1fr);gap:clamp(38px,5vw,58px) clamp(30px,4vw,52px);align-items:start;}
   .fam-grid .fam-div{display:none;}
-  .fam-grid .fam-block:last-child{grid-column:1 / -1;}
   .loc-grid{grid-template-columns:repeat(2,1fr);align-items:start;}
-  .loc-grid .loc-card:first-child{grid-column:1 / -1;}
-  .loc-photo{aspect-ratio:21/9;}
-  .loc-grid .loc-card:not(:first-child) .loc-photo{aspect-ratio:16/10;}
+  .loc-photo{aspect-ratio:16/10;}
 }
 @media(min-width:1024px){
-  .loc-grid{grid-template-columns:repeat(3,1fr);}
-  .loc-grid .loc-card:first-child{grid-column:auto;}
-  .loc-photo,.loc-grid .loc-card:not(:first-child) .loc-photo{aspect-ratio:4/3;}
-  .fam-grid{grid-template-columns:repeat(3,1fr);}
-  .fam-grid .fam-block:last-child{grid-column:auto;}
+  .loc-photo{aspect-ratio:4/3;}
 }
 @media(max-width:400px){
   .cd-grid{gap:6px;}
@@ -891,14 +906,16 @@ footer{
       <h2 class="sec-title rv">Nuestras <em>familias</em></h2>
       <div class="hair rv"></div>
       <div class="fam-grid">
-        <div class="fam-block rv">
-          <p class="fam-role">Padres de la novia</p>
-          <p class="fam-names">Felix Cortes Lopez<br><span class="amp">&amp;</span><br>Rosa Mendez Castillo</p>
-        </div>
-        <div class="fam-div rv"></div>
-        <div class="fam-block rv">
-          <p class="fam-role">Padres del novio</p>
-          <p class="fam-names">Pedro Montiel Cruz<br><span class="amp">&amp;</span><br>Norma Castañeda Vazquez</p>
+        <div class="fam-block fam-rot rv" id="famRot">
+          <div class="fam-slide is-on">
+            <p class="fam-role">Padres de la novia</p>
+            <p class="fam-names">Felix Cortes Lopez<br><span class="amp">&amp;</span><br>Rosa Mendez Castillo</p>
+          </div>
+          <div class="fam-slide">
+            <p class="fam-role">Padres del novio</p>
+            <p class="fam-names">Pedro Montiel Cruz<br><span class="amp">&amp;</span><br>Norma Castañeda Vazquez</p>
+          </div>
+          <div class="fam-dots" id="famDots" aria-hidden="true"></div>
         </div>
         <div class="fam-div rv"></div>
         <div class="fam-block rv">
@@ -942,30 +959,20 @@ footer{
             <img src="./recepcion.jpg" alt="Sierra de Tlatlauquitepec, entorno del salón La Conquista" width="900" height="517" decoding="async">
           </div>
           <div class="loc-body emboss">
-            <svg class="loc-icon" width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-              <path d="M10 5 H26 L24 15 C24 18.3 21.3 21 18 21 C14.7 21 12 18.3 12 15 Z" stroke="#C4557F" stroke-width="1.2" fill="none" opacity=".72"/>
-              <path d="M18 21 V29 M12 31 H24" stroke="#C4557F" stroke-width="1.2" stroke-linecap="round" opacity=".62"/>
-              <path d="M12 10 H24" stroke="#C9A456" stroke-width="1" opacity=".6"/>
+            <svg class="loc-icon" width="46" height="36" viewBox="0 0 46 36" fill="none" aria-hidden="true">
+              <circle cx="12" cy="22" r="8" stroke="#C4557F" stroke-width="1.2" fill="none" opacity=".72"/>
+              <circle cx="21" cy="22" r="8" stroke="#C4557F" stroke-width="1.2" fill="none" opacity=".52"/>
+              <path d="M21 14 L19.4 10.4 L21 8.2 L22.6 10.4 Z" fill="#C9A456" opacity=".85"/>
+              <path d="M31 6 H43 L41.6 15 C41.6 17.8 39.4 20 36.6 20 C33.8 20 31.6 17.8 31.6 15 Z" stroke="#C4557F" stroke-width="1.2" fill="none" opacity=".72"/>
+              <path d="M36.8 20 V29 M32 31 H41.6" stroke="#C4557F" stroke-width="1.2" stroke-linecap="round" opacity=".62"/>
+              <path d="M32.4 10.4 H42" stroke="#C9A456" stroke-width="1" opacity=".6"/>
             </svg>
-            <p class="loc-tipo">Recepción</p>
+            <p class="loc-tipo">Ceremonia civil y recepción</p>
             <p class="loc-hora">2:00 p.m.</p>
             <p class="loc-name">Salón La Conquista</p>
             <p class="loc-addr">Carretera Federal Teziutlán – Acajete<br>Ocotlán de Betancourt, Tlatlauquitepec, Puebla</p>
+            <p class="loc-nota">La ceremonia civil se celebra en el mismo salón, antes de comenzar la fiesta.</p>
             <a class="loc-link" href="https://maps.app.goo.gl/UetQeYXWp2SPi47p6" target="_blank" rel="noopener"><span>Cómo llegar</span></a>
-          </div>
-        </article>
-
-        <article class="loc-card rv">
-          <div class="loc-body emboss" style="padding-top:clamp(34px,4.4vw,46px)">
-            <svg class="loc-icon" width="38" height="34" viewBox="0 0 38 34" fill="none" aria-hidden="true">
-              <circle cx="15" cy="21" r="9" stroke="#C4557F" stroke-width="1.2" fill="none" opacity=".75"/>
-              <circle cx="25" cy="21" r="9" stroke="#C4557F" stroke-width="1.2" fill="none" opacity=".55"/>
-              <path d="M25 12 L23 8 L25 5.5 L27 8 Z" fill="#C9A456" opacity=".85"/>
-            </svg>
-            <p class="loc-tipo">Ceremonia civil</p>
-            <p class="loc-hora">2:00 p.m.</p>
-            <p class="loc-name">En el salón de recepción</p>
-            <p class="loc-addr">Salón La Conquista</p>
           </div>
         </article>
       </div>
@@ -1463,6 +1470,32 @@ function startParticles(){
   for(var n=0;n<5;n++) setTimeout(function(){botanic(false);},n*1000+600);
   for(var q=0;q<5;q++) setTimeout(function(){botanic(true);},q*1150+800);
 }
+
+/* ── PADRES: novia primero, luego novio, con fade ── */
+(function(){
+  var rot=document.getElementById('famRot');
+  if(!rot)return;
+  var slides=rot.querySelectorAll('.fam-slide');
+  var dotsBox=document.getElementById('famDots');
+  if(slides.length<2)return;
+  var i=0,timer=null;
+  for(var k=0;k<slides.length;k++){
+    var d=document.createElement('i');
+    if(k===0)d.className='on';
+    dotsBox.appendChild(d);
+  }
+  var dots=dotsBox.querySelectorAll('i');
+  function show(n){
+    slides[i].classList.remove('is-on');
+    dots[i].classList.remove('on');
+    i=n;
+    slides[i].classList.add('is-on');
+    dots[i].classList.add('on');
+  }
+  if(!prefersReduced){
+    timer=setInterval(function(){show((i+1)%slides.length);},4600);
+  }
+})();
 
 /* ── COUNTDOWN ── */
 (function(){
