@@ -965,6 +965,18 @@ section{padding:var(--pad-y) var(--pad-x);position:relative;}
   font-family:var(--serif);font-style:italic;font-size:clamp(17px,1.3vw,19px);
   text-align:center;margin:16px auto 0;max-width:420px;line-height:1.6;
 }
+.rsvp-asig-nota{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:18px;font-weight:600;line-height:1.5;color:var(--ink);margin:4px auto 14px;text-align:center}
+.rsvp-asignados{display:flex;flex-direction:column;gap:12px;max-width:420px;margin:0 auto 20px}
+.rsvp-person{background:var(--paper);border:1.5px solid var(--gold-soft);border-radius:14px;padding:14px 14px 12px;text-align:center;transition:border-color .25s,background .25s}
+.rsvp-person[data-choice="yes"]{border-color:var(--sage);background:#F1F5EE}
+.rsvp-person[data-choice="no"]{border-color:var(--wine-soft);background:#FBF0F0}
+.rsvp-person-name{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;color:var(--accent-deep);margin-bottom:10px;line-height:1.3}
+.rsvp-person-btns{display:flex;gap:8px}
+.rsvp-person-btn{flex:1;min-height:44px;padding:10px 6px;border-radius:10px;border:1.5px solid var(--gold-soft);background:#fff;color:var(--ink);font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.rsvp-person-btn.on-yes{background:var(--sage);border-color:var(--sage);color:#fff}
+.rsvp-person-btn.on-no{background:var(--wine);border-color:var(--wine);color:#fff}
+.rsvp-person-btn:disabled,.rsvp-btn:disabled{opacity:.55;cursor:default}
+
 .rsvp-feedback:empty{display:none;}
 .rsvp-deadline{
   display:inline-flex;align-items:center;gap:8px;margin-top:26px;
@@ -1583,17 +1595,13 @@ footer{
           </div>
 
           <div id="rsvpBandeja">
-            <div class="rsvp-pases-display" id="pasesWrap">
+            <div class="rsvp-pases-display" id="pasesWrap" style="display:none">
               <div class="rsvp-pases-label">Lugares reservados</div>
               <div class="rsvp-pases-num" id="pasesNum">1</div>
             </div>
 
-            <div class="rsvp-toggle">
-              <button class="rsvp-toggle-btn" id="btnYes" type="button">Sí, asistiré</button>
-              <button class="rsvp-toggle-btn" id="btnNo" type="button">No podré asistir</button>
-            </div>
-
-            <div class="rsvp-fields" id="rsvpFields" style="display:none"></div>
+            <p class="rsvp-asig-nota" id="rsvpAsigNota" style="display:none">Marca si asistirá cada persona de tu invitación.</p>
+            <div class="rsvp-asignados" id="rsvpFields" style="display:none"></div>
 
             <button class="rsvp-btn" id="rsvpBtn" type="button"><span id="rsvpBtnText">Confirmar</span></button>
           </div>
@@ -2119,146 +2127,188 @@ function initItinerary(){
   if(note)note.remove();
 })();
 
-/* ── RSVP — Panel de Invitados ── */
+/* ── RSVP — Panel de Invitados (nombres asignados) ── */
 (function(){
   var PANEL_API='https://panel-invitados.vercel.app/api/confirmar';
   var RSVP_URL='https://boda-soledad-y-pedro.vercel.app';
   var DEADLINE=new Date('2026-12-19T00:00:00-06:00').getTime();
   var frozen=Date.now()>DEADLINE;
+  var ROJO='#8E1C1C';
 
+  /* El panel manda un token base64url en ?i= ("nombre|pases|menores") que
+     WhatsApp no rompe. Se conserva ?para= por si se envió algún link así. */
+  function decodeInvite(tok){
+    try{
+      var b64=tok.replace(/-/g,'+').replace(/_/g,'/');
+      while(b64.length%4)b64+='=';
+      var bin=atob(b64),bytes=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);
+      return (new TextDecoder().decode(bytes).split('|')[0]||'').trim();
+    }catch(e){return '';}
+  }
   var qs=new URLSearchParams(window.location.search);
-  var urlPara=(qs.get('para')||'').trim();
-  var p=parseInt(qs.get('pases'),10);
-  var pases=(!isNaN(p)&&p>0)?Math.min(p,10):1;
+  var tok=qs.get('i');
+  var urlPara=(tok?decodeInvite(tok):'')||(qs.get('para')||'').trim();
 
   var holaEl=document.getElementById('rsvpHola');
+  var pasesWrap=document.getElementById('pasesWrap');
+  var pasesNum=document.getElementById('pasesNum');
+  var notaEl=document.getElementById('rsvpAsigNota');
+  var listEl=document.getElementById('rsvpFields');
   var bandeja=document.getElementById('rsvpBandeja');
   var gracias=document.getElementById('rsvpGracias');
   var gTitle=document.getElementById('rsvpGraciasTitle');
   var gSub=document.getElementById('rsvpGraciasSub');
   var editarBtn=document.getElementById('rsvpEditarBtn');
-  var fieldsEl=document.getElementById('rsvpFields');
-  var btnYes=document.getElementById('btnYes');
-  var btnNo=document.getElementById('btnNo');
   var btn=document.getElementById('rsvpBtn');
   var btnText=document.getElementById('rsvpBtnText');
   var fb=document.getElementById('rsvpFeedback');
-  var estado=null;
 
-  if(urlPara)holaEl.textContent='¡Hola, '+urlPara+'!';
+  var asignados=[],choices={},bloqueado=false;
 
-  if(!isNaN(p)&&p>0){
-    document.getElementById('pasesNum').textContent=pases;
-    document.getElementById('pasesWrap').style.display='flex';
-  }
+  /* Sin acentos ni mayúsculas para emparejar respuestas guardadas */
+  function clave(x){return String(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();}
+  function setFb(msg,col){fb.textContent=msg||'';fb.style.color=col||'var(--ink)';}
+  function cerrado(){return frozen||bloqueado;}
 
-  for(var j=1;j<=pases;j++){
-    var inp=document.createElement('input');
-    inp.type='text';inp.id='rsvpName'+j;inp.className='rsvp-input';
-    inp.placeholder='Nombre completo del invitado '+j;
-    inp.autocomplete='name';
-    if(j===1&&urlPara)inp.value=urlPara;
-    fieldsEl.appendChild(inp);
+  function render(){
+    listEl.innerHTML='';
+    asignados.forEach(function(nm,idx){
+      var card=document.createElement('div');
+      card.className='rsvp-person';
+      if(choices[idx])card.setAttribute('data-choice',choices[idx]);
+      var name=document.createElement('div');
+      name.className='rsvp-person-name';
+      name.textContent=nm;
+      var row=document.createElement('div');
+      row.className='rsvp-person-btns';
+      [['yes','Asistirá'],['no','No asistirá']].forEach(function(op){
+        var b=document.createElement('button');
+        b.type='button';
+        b.className='rsvp-person-btn'+(choices[idx]===op[0]?(op[0]==='yes'?' on-yes':' on-no'):'');
+        b.textContent=op[1];
+        b.disabled=cerrado();
+        b.addEventListener('click',function(){
+          if(cerrado())return;
+          choices[idx]=op[0];setFb('');render();
+        });
+        row.appendChild(b);
+      });
+      card.appendChild(name);card.appendChild(row);
+      listEl.appendChild(card);
+    });
+    listEl.style.display=asignados.length?'flex':'none';
+    notaEl.style.display=asignados.length?'block':'none';
   }
-  function getNombres(){
-    var out=[];
-    for(var k=1;k<=pases;k++){
-      var v=document.getElementById('rsvpName'+k).value.trim();
-      if(v)out.push(v);
-    }
-    return out;
-  }
-  function setNombres(arr){
-    for(var k=1;k<=pases;k++){
-      var el=document.getElementById('rsvpName'+k);
-      el.value=(arr&&arr[k-1])?arr[k-1]:(k===1&&urlPara?urlPara:'');
-    }
-  }
-  function setFb(msg,col){fb.textContent=msg;fb.style.color=col||'var(--ink)';}
-
-  function select(e){
-    estado=e;
-    btnYes.classList.toggle('on-yes',e==='confirmado');
-    btnNo.classList.toggle('on-no',e==='declino');
-    fieldsEl.style.display=(e==='confirmado')?'flex':'none';
-    if(e==='declino')setNombres([]);
-  }
-  btnYes.addEventListener('click',function(){if(!frozen)select('confirmado');});
-  btnNo.addEventListener('click',function(){if(!frozen)select('declino');});
 
   function mostrarGracias(e,nombres){
     if(e==='confirmado'){
       gTitle.textContent='¡Gracias por confirmar!';
-      gSub.textContent=(nombres.length<=1)
-        ?('Te esperamos, '+(nombres[0]||urlPara||'')+'.')
-        :('Confirmamos '+nombres.length+' lugares: '+nombres.join(', ')+'.');
+      gSub.textContent=nombres.length===1
+        ?'Te esperamos, '+nombres[0]+'.'
+        :'Confirmamos '+nombres.length+' lugares: '+nombres.join(', ')+'.';
     }else{
       gTitle.textContent='Gracias por avisarnos';
-      gSub.textContent='Lamentamos que no puedas acompañarnos. Te vamos a extrañar.';
+      gSub.textContent='Lamentamos que no puedan acompañarnos. Los vamos a extrañar.';
     }
     bandeja.style.display='none';
     gracias.style.display='';
     editarBtn.disabled=frozen;
+    editarBtn.style.display=bloqueado?'none':'';
   }
   editarBtn.addEventListener('click',function(){
-    if(frozen)return;
-    gracias.style.display='none';
-    bandeja.style.display='';
-    setFb('','');
+    if(cerrado())return;
+    gracias.style.display='none';bandeja.style.display='';setFb('');
   });
 
-  btn.disabled=true;
+  function cierra(msg){
+    btn.disabled=true;
+    Array.prototype.forEach.call(listEl.querySelectorAll('button'),function(b){b.disabled=true;});
+    if(msg)setFb(msg,ROJO);
+  }
+  function cierraPorBloqueo(){
+    bloqueado=true;editarBtn.style.display='none';
+    btnText.textContent='Confirmaciones cerradas';
+    cierra('Las confirmaciones de esta invitación ya están cerradas. Si necesitas un cambio, contacta a los novios.');
+  }
+  function applyFreeze(){
+    if(!frozen)return;
+    editarBtn.disabled=true;btnText.textContent='Plazo cerrado';
+    cierra('');setFb('El periodo de confirmación ya cerró.','var(--gold-deep)');
+  }
+
+  if(urlPara)holaEl.textContent='¡Hola, '+urlPara+'!';
+  cierra('');
+
   if(urlPara){
     fetch(PANEL_API+'?nombre='+encodeURIComponent(urlPara)+'&url_boda='+encodeURIComponent(RSVP_URL))
       .then(function(r){return r.json();})
-      .then(function(d){
-        var inv=d&&(d.invitado||d);
-        if(inv&&inv.estado){
-          select(inv.estado);
-          setNombres(inv.nombres_confirmados||[]);
-          btnText.textContent='Actualizar respuesta';
-          mostrarGracias(inv.estado,inv.nombres_confirmados||[]);
+      .then(function(resp){
+        var d=resp&&resp.invitado;
+        /* Si el panel no la tiene no se deja confirmar (crearía una invitación suelta) */
+        if(!d){cierra('No encontramos tu invitación. Pide a los novios que te envíen tu enlace de nuevo.');applyFreeze();return;}
+        asignados=(Array.isArray(d.nombres_asignados)?d.nombres_asignados:[]).filter(function(n){return n&&String(n).trim();});
+        if(!asignados.length){cierra('Tu invitación aún no tiene lugares asignados. Contacta a los novios.');applyFreeze();return;}
+        pasesNum.textContent=asignados.length;pasesWrap.style.display='flex';
+        if(d.estado==='confirmado'||d.estado==='declino'){
+          var conf=(d.nombres_confirmados||[]).map(clave);
+          asignados.forEach(function(nm,i){choices[i]=d.estado==='declino'?'no':(conf.indexOf(clave(nm))>=0?'yes':'no');});
         }
+        render();
+        if(!frozen)btn.disabled=false;
+        if(d.estado==='confirmado'||d.estado==='declino'){
+          btnText.textContent='Actualizar respuesta';
+          mostrarGracias(d.estado,d.nombres_confirmados||[]);
+        }
+        if(d.bloqueado)cierraPorBloqueo();
+        applyFreeze();
       })
-      .catch(function(){})
-      .then(function(){btn.disabled=frozen;});
+      .catch(function(){setFb('No pudimos cargar tu invitación. Recarga la página.',ROJO);applyFreeze();});
   }else{
-    btn.disabled=frozen;
-  }
-  if(frozen){
-    btnYes.disabled=true;btnNo.disabled=true;
-    setFb('El periodo de confirmación ya cerró.','var(--gold-deep)');
+    cierra('Abre el enlace personalizado que te enviaron para confirmar tu asistencia.');
+    applyFreeze();
   }
 
   btn.addEventListener('click',function(){
-    if(frozen)return;
-    if(!estado){setFb('Por favor elige si podrás acompañarnos.','#8E1C1C');return;}
-    var nombres=getNombres();
-    if(estado==='confirmado'&&nombres.length===0){
-      setFb('Escribe al menos un nombre.','#8E1C1C');return;
-    }
-    btn.disabled=true;btnText.textContent='Enviando...';
+    if(btn.disabled||cerrado()||!urlPara||!asignados.length)return;
+    var faltan=asignados.filter(function(_,i){return !choices[i];}).length;
+    if(faltan){setFb('Por favor responde por cada invitado ('+faltan+' pendiente'+(faltan===1?'':'s')+').',ROJO);return;}
+    var si=asignados.filter(function(_,i){return choices[i]==='yes';});
+    var estadoFinal=si.length?'confirmado':'declino';
+    btn.disabled=true;btnText.textContent='Enviando...';setFb('');
     fetch(PANEL_API,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        nombre:urlPara||(nombres[0]||'Invitado'),
+        nombre:urlPara,
         url_boda:RSVP_URL,
-        estado:estado,
-        pases_confirmados:(estado==='confirmado')?nombres.length:0,
-        nombres_confirmados:(estado==='confirmado')?nombres:[]
+        estado:estadoFinal,
+        pases_confirmados:si.length,
+        nombres_confirmados:si
       })
     })
-    .then(function(r){if(!r.ok)throw new Error('http');return r.json();})
-    .then(function(){
-      setFb('','');
-      btnText.textContent='Actualizar respuesta';
+    .then(function(r){return r.json().catch(function(){return null;}).then(function(d){return {ok:r.ok,d:d};});})
+    .then(function(res){
       btn.disabled=false;
-      mostrarGracias(estado,nombres);
+      if(res.ok&&res.d&&res.d.ok){
+        btnText.textContent='Actualizar respuesta';
+        mostrarGracias(estadoFinal,si);
+        return;
+      }
+      btnText.textContent='Confirmar';
+      var err=res.d&&res.d.error;
+      if(err==='respuestas_cerradas'){cierraPorBloqueo();return;}
+      setFb(
+        err==='no_match'
+          ?'No pudimos identificar tu invitación. Abre el enlace personalizado que te enviaron.'
+          :err==='invitacion_borrada'
+            ?'Esta invitación ya no está activa. Contacta a los novios para que te envíen un enlace nuevo.'
+            :'Hubo un problema al enviar. Inténtalo de nuevo.',
+        ROJO);
     })
     .catch(function(){
       btn.disabled=false;btnText.textContent='Confirmar';
-      setFb('Error de conexión. Inténtalo de nuevo en un momento.','#8E1C1C');
+      setFb('Error de conexión. Inténtalo de nuevo en un momento.',ROJO);
     });
   });
 })();
